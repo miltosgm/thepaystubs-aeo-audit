@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEO Audit — thepaystubs.com</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0f1e; color: #e2e8f0; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #1a1060 0%, #0a0f1e 100%); padding: 48px 40px; border-bottom: 1px solid #2d2f6e; }
+.header h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.header .sub { color: #7c7fad; font-size: 1rem; margin-bottom: 20px; }
+.header .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+.header .meta span { background: #1a1d3a; border: 1px solid #2d2f6e; border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; color: #94a3b8; }
+.ai-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.ai-badge { padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.03em; }
+.badge-chatgpt { background: #0d4a2e; color: #4ade80; border: 1px solid #166534; }
+.badge-perplexity { background: #1e1b4b; color: #a5b4fc; border: 1px solid #4338ca; }
+.badge-google { background: #3d1a00; color: #fb923c; border: 1px solid #ea580c; }
+.badge-claude { background: #2d1a00; color: #fbbf24; border: 1px solid #d97706; }
+.badge-bing { background: #0c2352; color: #60a5fa; border: 1px solid #2563eb; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 48px; }
+.score-card { background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 20px; }
+.score-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: #6b7280; margin-bottom: 10px; }
+.score-card .score { font-size: 2.2rem; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.score-card .bar { height: 4px; border-radius: 2px; background: #1f2937; margin-top: 10px; }
+.score-card .bar-fill { height: 100%; border-radius: 2px; }
+.red .score { color: #ef4444; }
+.red .bar-fill { background: #ef4444; }
+.red { border-color: #450a0a; }
+.yellow .score { color: #f59e0b; }
+.yellow .bar-fill { background: #f59e0b; }
+.yellow { border-color: #451a03; }
+.green .score { color: #10b981; }
+.green .bar-fill { background: #10b981; }
+.green { border-color: #052e16; }
+.overall { background: linear-gradient(135deg, #1a1060, #111827); border: 1px solid #4338ca; border-radius: 14px; padding: 24px; margin-bottom: 40px; display: flex; align-items: center; gap: 24px; }
+.overall .big-score { font-size: 4rem; font-weight: 800; color: #f59e0b; }
+.overall .desc { flex: 1; }
+.overall .desc h2 { font-size: 1.3rem; margin-bottom: 6px; }
+.overall .desc p { color: #94a3b8; font-size: 0.9rem; line-height: 1.6; }
+section { margin-bottom: 48px; }
+section h2 { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; padding: 12px 16px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 10px; }
+section h2 .tag { font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+.section-critical h2 { background: #1c0606; border-left: 3px solid #ef4444; }
+.section-opportunity h2 { background: #1c1206; border-left: 3px solid #f59e0b; }
+.section-good h2 { background: #061c0f; border-left: 3px solid #10b981; }
+.section-action h2 { background: #06101c; border-left: 3px solid #3b82f6; }
+.issue-card { background: #111827; border: 1px solid #1f2937; border-radius: 0 0 0 0; padding: 24px; margin-top: 1px; }
+.issue-card:last-child { border-radius: 0 0 8px 8px; }
+.issue-card h3 { font-size: 1rem; font-weight: 600; color: #f1f5f9; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; }
+.issue-card h3 .num { background: #1f2937; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #6b7280; flex-shrink: 0; }
+.issue-card p { color: #94a3b8; font-size: 0.88rem; line-height: 1.7; margin-bottom: 12px; }
+.issue-card .impact { font-size: 0.8rem; color: #6b7280; background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 8px 12px; margin-top: 8px; }
+.issue-card .impact strong { color: #94a3b8; }
+.fix-box { background: #052e16; border: 1px solid #166534; border-radius: 8px; padding: 14px; margin-top: 12px; }
+.fix-box .fix-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: #4ade80; font-weight: 600; margin-bottom: 6px; }
+.fix-box p { color: #86efac; font-size: 0.85rem; }
+pre { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 16px; font-size: 0.78rem; color: #7dd3fc; overflow-x: auto; margin-top: 12px; white-space: pre-wrap; word-break: break-word; }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.check-item { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; }
+.check-item .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+.check-item .text .title { font-size: 0.88rem; font-weight: 600; color: #f1f5f9; margin-bottom: 3px; }
+.check-item .text .desc { font-size: 0.8rem; color: #6b7280; line-height: 1.5; }
+.action-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.action-table th { background: #111827; color: #6b7280; text-align: left; padding: 10px 14px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #1f2937; }
+.action-table td { padding: 12px 14px; border-bottom: 1px solid #111827; vertical-align: top; }
+.action-table tr:hover td { background: #111827; }
+.p1 { color: #ef4444; font-weight: 700; }
+.p2 { color: #f59e0b; font-weight: 600; }
+.p3 { color: #3b82f6; }
+.effort-low { color: #10b981; }
+.effort-med { color: #f59e0b; }
+.effort-high { color: #ef4444; }
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+.comp-card { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 14px; }
+.comp-card .comp-name { font-weight: 700; font-size: 0.88rem; margin-bottom: 8px; }
+.comp-card .comp-name.theirs { color: #60a5fa; }
+.comp-card .comp-name.competitor { color: #f87171; }
+.comp-card ul { list-style: none; }
+.comp-card ul li { font-size: 0.78rem; color: #6b7280; padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+.comp-card ul li::before { content: "→"; color: #374151; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🤖 AEO Audit Report</h1>
+  <div class="sub">Answer Engine Optimization — How well AI tools cite thepaystubs.com</div>
+  <div class="meta">
+    <span>🌐 thepaystubs.com</span>
+    <span>📅 March 5, 2026</span>
+    <span>⚙️ AISquad Audit</span>
+    <span>🔍 Live crawl + schema analysis</span>
+  </div>
+  <div class="ai-badges">
+    <span class="ai-badge badge-chatgpt">ChatGPT</span>
+    <span class="ai-badge badge-perplexity">Perplexity</span>
+    <span class="ai-badge badge-google">Google AI Overviews</span>
+    <span class="ai-badge badge-claude">Claude</span>
+    <span class="ai-badge badge-bing">Bing Copilot</span>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Overall Score -->
+  <div class="overall">
+    <div class="big-score">4.4<span style="font-size:1.5rem;color:#94a3b8">/10</span></div>
+    <div class="desc">
+      <h2>🟡 Moderate AEO Readiness — Needs Significant Work</h2>
+      <p>ThePayStubs has some foundational schema in place and solid blog content, but critical trust signals are missing. AI tools cannot verify who built this product, cannot trust the review count in the schema, and have no author expertise to cite. Until those are fixed, the site will be underrepresented in AI-generated recommendations despite having 1,493 real Trustpilot reviews.</p>
+    </div>
+  </div>
+
+  <!-- Score Cards -->
+  <div class="score-grid">
+    <div class="score-card red">
+      <div class="label">E-E-A-T / Trust</div>
+      <div class="score">3/10</div>
+      <div class="bar"><div class="bar-fill" style="width:30%"></div></div>
+    </div>
+    <div class="score-card yellow">
+      <div class="label">Structured Data</div>
+      <div class="score">5/10</div>
+      <div class="bar"><div class="bar-fill" style="width:50%"></div></div>
+    </div>
+    <div class="score-card yellow">
+      <div class="label">Brand Entity</div>
+      <div class="score">5/10</div>
+      <div class="bar"><div class="bar-fill" style="width:50%"></div></div>
+    </div>
+    <div class="score-card green">
+      <div class="label">Content Answerability</div>
+      <div class="score">7/10</div>
+      <div class="bar"><div class="bar-fill" style="width:70%"></div></div>
+    </div>
+    <div class="score-card yellow">
+      <div class="label">External Authority</div>
+      <div class="score">5/10</div>
+      <div class="bar"><div class="bar-fill" style="width:50%"></div></div>
+    </div>
+    <div class="score-card green">
+      <div class="label">FAQ / Q&A Coverage</div>
+      <div class="score">7/10</div>
+      <div class="bar"><div class="bar-fill" style="width:70%"></div></div>
+    </div>
+    <div class="score-card red">
+      <div class="label">Competitor Positioning</div>
+      <div class="score">2/10</div>
+      <div class="bar"><div class="bar-fill" style="width:20%"></div></div>
+    </div>
+    <div class="score-card red">
+      <div class="label">Author / Expert Signals</div>
+      <div class="score">1/10</div>
+      <div class="bar"><div class="bar-fill" style="width:10%"></div></div>
+    </div>
+  </div>
+
+  <!-- Critical Errors -->
+  <section class="section-critical">
+    <h2>🔴 Critical Errors — Fix Immediately <span class="tag" style="background:#450a0a;color:#ef4444">5 issues</span></h2>
+    
+    <div class="issue-card">
+      <h3><span class="num">1</span>Product Schema reviewCount is WRONG — Shows 10, has 1,493</h3>
+      <p>The <code>Product</code> schema on the homepage declares <code>"reviewCount": "10"</code>. The actual Trustpilot page shows <strong>1,493 verified reviews</strong>. This is the single most damaging AEO error on the site.</p>
+      <p>AI tools (especially Google AI Overviews and Perplexity) extract aggregateRating directly from schema to rank product recommendations. A tool with 10 reviews loses to a competitor with 500+ every single time.</p>
+      <div class="impact"><strong>AI impact:</strong> When someone asks "what's a good paystub generator?", competitors with correct review counts will be ranked above ThePayStubs — despite having fewer actual reviews.</div>
+      <div class="fix-box">
+        <div class="fix-label">✅ Fix</div>
+        <p>Update Product schema: set <code>"reviewCount": "1493"</code> and add <code>"bestRating": "5"</code>. Set a monthly reminder to update this number as reviews grow.</p>
+      </div>
+      <pre>{
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.5",
+    "reviewCount": "1493",
+    "bestRating": "5",
+    "worstRating": "1"
+  }
+}</pre>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">2</span>About Page Is Nearly Empty — AI Cannot Verify Expertise</h3>
+      <p>The <code>/about-us</code> page contains approximately <strong>100 words</strong> with no founder name, no accounting firm name, no team credentials, no history, and no location. The only claim is "created by a professional accounting firm" — unverifiable.</p>
+      <p>E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) is the primary framework Google uses to decide what content feeds AI Overviews. Without named humans and verifiable credentials, this site has no expertise signal.</p>
+      <div class="impact"><strong>AI impact:</strong> ChatGPT and Claude will not cite a financial tool they can't attribute to real experts. Anonymous tools in the payroll/financial space are treated as lower-trust sources.</div>
+      <div class="fix-box">
+        <div class="fix-label">✅ Fix</div>
+        <p>Rebuild About page with: company founding year, name of accounting firm, founder name + credentials, team bios with LinkedIn links, physical state/city of operation, and a clear mission statement. Minimum 600 words.</p>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">3</span>Zero Author Attribution on Blog Posts</h3>
+      <p>Every blog post on the site is published without a named author. No byline, no author box, no credentials. Blog articles cover payroll, taxes, and legal compliance — topics where author credentials are critical for AI trust.</p>
+      <div class="impact"><strong>AI impact:</strong> Perplexity explicitly displays source authors when citing content. If there's no author, it deprioritizes the citation in favor of sources with named experts (e.g., "According to [Name], CPA at ThePayStubs...").</div>
+      <div class="fix-box">
+        <div class="fix-label">✅ Fix</div>
+        <p>1. Create author profiles with name, title (CPA/HR specialist), photo, LinkedIn. 2. Add visible bylines to all blog posts. 3. Add <code>author</code> to all BlogPosting schema. This applies to every existing post retroactively.</p>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">4</span>No Article/BlogPosting Schema on Any Blog Post</h3>
+      <p>Checked multiple blog posts. None contain <code>BlogPosting</code> or <code>Article</code> structured data. AI crawlers use this schema to understand publication dates, authors, and content reliability. Without it, blog content is treated as static marketing copy rather than authoritative articles.</p>
+      <div class="fix-box">
+        <div class="fix-label">✅ Fix — Add to every blog post</div>
+      </div>
+      <pre>{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How To Get Pay Stubs From Previous Employer?",
+  "description": "Step-by-step guide to retrieving paystubs from a former employer.",
+  "datePublished": "2024-03-15",
+  "dateModified": "2026-01-10",
+  "author": {
+    "@type": "Person",
+    "name": "Jane Smith, CPA",
+    "url": "https://www.thepaystubs.com/author/jane-smith"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ThePayStubs",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.thepaystubs.com/bundles/thepaystubswebsite/images/logo.png"
+    }
+  }
+}</pre>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">5</span>No HowTo Schema on How-To Articles</h3>
+      <p><code>HowTo</code> schema is one of the highest-performing schema types for Google AI Overviews. It extracts your steps directly and presents them as the AI answer. The site has multiple strong how-to articles with none of this markup.</p>
+      <p><strong>Posts that need HowTo schema immediately:</strong></p>
+      <ul style="list-style:none;padding:0;margin:8px 0 12px 0;">
+        <li style="padding:4px 0;color:#94a3b8;font-size:0.85rem">→ "How To Get Pay Stubs From Previous Employer?"</li>
+        <li style="padding:4px 0;color:#94a3b8;font-size:0.85rem">→ "How to create a paystub document?"</li>
+        <li style="padding:4px 0;color:#94a3b8;font-size:0.85rem">→ "How Does Our Check Stub Maker Work?"</li>
+      </ul>
+      <div class="fix-box">
+        <div class="fix-label">✅ High ROI — add HowTo schema to these 3 posts first</div>
+        <p>Each step in the how-to content should be a <code>HowToStep</code> with name + text. This is directly extracted into AI step-by-step answers.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Opportunities -->
+  <section class="section-opportunity">
+    <h2>🟡 Significant Opportunities <span class="tag" style="background:#451a03;color:#f59e0b">7 issues</span></h2>
+
+    <div class="issue-card">
+      <h3><span class="num">6</span>Missing SoftwareApplication Schema — AI Doesn't Know This is a Tool</h3>
+      <p>ThePayStubs is a SaaS tool, but the homepage only uses <code>Product</code> schema. <code>SoftwareApplication</code> schema is directly parsed by AI tools when answering "what tools can I use to create paystubs?" queries. Without it, the site competes poorly in tool-recommendation answers.</p>
+      <pre>{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ThePayStubs Paystub Generator",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": { "@type": "Offer", "price": "8.99", "priceCurrency": "USD" },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.5",
+    "reviewCount": "1493"
+  }
+}</pre>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">7</span>FAQPage Schema Questions Are Too Generic</h3>
+      <p>The FAQPage schema on the homepage has 9 questions, but they're written for generic "paystub generator service" queries, not for ThePayStubs specifically. AI tools match user queries to FAQ answers — if the phrasing doesn't match, the answer won't surface.</p>
+      <p><strong>Current (generic):</strong> "Are pay stub generator services secure and reliable?"<br>
+      <strong>Better (brand-specific):</strong> "Is ThePayStubs.com legit and trustworthy?"</p>
+      <div class="fix-box">
+        <div class="fix-label">✅ Replace/add these FAQ questions</div>
+        <p>• "How much does ThePayStubs cost per paystub?" • "Is ThePayStubs legit?" • "How fast do I get my paystub from ThePayStubs?" • "Can I use a ThePayStubs document for a loan application?" • "Does ThePayStubs work for self-employed and freelancers?" • "What's the difference between ThePayStubs and BlinkPayroll?"</p>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">8</span>No Competitor Comparison Content</h3>
+      <p>When users ask AI tools "best paystub generator alternatives" or "ThePayStubs vs [competitor]", there's nothing on the site to influence that answer. Competitors are already positioning:</p>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="comp-name competitor">securepaystubs.com</div>
+          <ul><li>"#1 Free Paystub Generator of 2025"</li><li>Clear free pricing → AI-extractable</li></ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name competitor">123paystubs.com</div>
+          <ul><li>"$3.99/stub, lowest price"</li><li>Specific price → AI picks this up</li></ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name competitor">paystubcreator.net</div>
+          <ul><li>Dedicated "AI Paystub Generator" page</li><li>Positioned for AI search queries</li></ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name theirs">thepaystubs.com</div>
+          <ul><li>"No.1 Checkstub Maker" — unsubstantiated</li><li>No specific differentiators AI can cite</li></ul>
+        </div>
+      </div>
+      <div class="fix-box">
+        <div class="fix-label">✅ Create these pages</div>
+        <p>1. <code>/paystub-generators-compared</code> — comparison table of top 5 generators<br>2. <code>/thepaystubs-alternatives</code> — honest comparison with differentiators<br>3. Replace "#1 Checkstub Maker" with "1,493 verified reviews | paystubs in under 2 minutes"</p>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">9</span>Reviews Page Has No Extractable Content</h3>
+      <p>The <code>/reviews</code> page is a Trustpilot widget embed only. AI crawlers see an empty page — no review text, no quotes, no names. With 1,493 reviews available, this is a massive missed opportunity to give AI tools customer-voice content to cite.</p>
+      <div class="fix-box">
+        <div class="fix-label">✅ Fix</div>
+        <p>Pull top 15 Trustpilot reviews as static HTML with Review schema. Include reviewer name, rating, date, and full review text. AI will extract these quotes directly.</p>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">10</span>No Dedicated Pricing Page</h3>
+      <p>One of the most common AI-answered questions for any SaaS tool is "how much does [X] cost?" There is no pricing page, and the price ($8.99) only appears in the Product schema — not in crawlable text. When asked about pricing, AI tools can't cite a clear answer and will direct users elsewhere.</p>
+      <div class="fix-box">
+        <div class="fix-label">✅ Create /pricing with:</div>
+        <p>Per-stub pricing table • Volume discount tiers • Comparison to manual payroll cost • FAQPage schema with "How much does a paystub cost?" • Clear "what's included" breakdown</p>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">11</span>Not Listed on Key AI-Queried Directories</h3>
+      <p>AI tools including Perplexity heavily cite Capterra, G2, GetApp, and Software Advice for software recommendations. ThePayStubs does not appear to have profiles on these platforms.</p>
+      <div class="fix-box">
+        <div class="fix-label">✅ Submit to (in order of AI citation frequency)</div>
+        <p>1. Capterra.com 2. G2.com 3. GetApp.com 4. Software Advice 5. Trustradius.com — Each listing adds a backlink AND appears in AI recommendation lists</p>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h3><span class="num">12</span>No Citations on Authoritative Financial Sites</h3>
+      <p>When ChatGPT or Perplexity recommends a financial tool, it pulls from sources like Investopedia, NerdWallet, Forbes Advisor, and Bankrate. ThePayStubs has zero citations on these sites based on our search analysis.</p>
+      <p>Competitors are getting featured in "best paystub generator" roundups on these sites, which directly feeds AI recommendations.</p>
+      <div class="fix-box">
+        <div class="fix-label">✅ Outreach targets</div>
+        <p>Investopedia • NerdWallet • Forbes Advisor • Business.com • The Balance • Fit Small Business — Target "best paystub generator" and "proof of income tools" roundups</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- What's Working -->
+  <section class="section-good">
+    <h2>✅ What's Working — Keep and Expand <span class="tag" style="background:#052e16;color:#10b981">8 signals</span></h2>
+    <div class="check-grid">
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">Organization Schema</div><div class="desc">Has sameAs, contactPoint, logo. Good brand entity foundation. Add address and foundingDate.</div></div>
+      </div>
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">FAQPage Schema on Homepage</div><div class="desc">9 Q&As present. Needs better question targeting — AI-extractable answers are there.</div></div>
+      </div>
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">Product Schema Present</div><div class="desc">Foundation is there — just needs correct reviewCount (1,493 not 10).</div></div>
+      </div>
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">Strong Blog Content</div><div class="desc">How-to articles, state law guides, payroll explainers — perfect AEO content, just needs schema markup.</div></div>
+      </div>
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">1,493 Trustpilot Reviews</div><div class="desc">Strong external trust signal. Just not being reflected in the schema correctly.</div></div>
+      </div>
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">Social Profiles in Schema</div><div class="desc">Facebook, Twitter, YouTube in sameAs. Good brand entity linkage.</div></div>
+      </div>
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">Multiple Form Generators</div><div class="desc">W2, 1099, 1040 generators give strong topical authority in the payroll/tax space.</div></div>
+      </div>
+      <div class="check-item">
+        <div class="icon">✅</div>
+        <div class="text"><div class="title">Dedicated FAQ Page</div><div class="desc">/faq has excellent Q&A content. Just needs FAQPage schema applied directly to that page.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Action Plan -->
+  <section class="section-action">
+    <h2>📋 Prioritized Action Plan <span class="tag" style="background:#06101c;color:#60a5fa">12 actions</span></h2>
+    <div class="table-wrap" style="overflow-x:auto">
+    <table class="action-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Action</th>
+          <th>Priority</th>
+          <th>Effort</th>
+          <th>AI Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Fix Product schema reviewCount → 1,493</td><td class="p1">P1 Critical</td><td class="effort-low">30 min</td><td>🔴 Immediate</td></tr>
+        <tr><td>2</td><td>Add FAQPage schema to /faq page</td><td class="p1">P1 Critical</td><td class="effort-low">2 hrs</td><td>🔴 Immediate</td></tr>
+        <tr><td>3</td><td>Rebuild About page with team + credentials</td><td class="p1">P1 Critical</td><td class="effort-med">1 day</td><td>🔴 High</td></tr>
+        <tr><td>4</td><td>Add BlogPosting schema to all blog posts</td><td class="p1">P1 Critical</td><td class="effort-med">4 hrs</td><td>🔴 High</td></tr>
+        <tr><td>5</td><td>Add named author bylines to all blog posts</td><td class="p1">P1 Critical</td><td class="effort-med">1 day</td><td>🔴 High</td></tr>
+        <tr><td>6</td><td>Add SoftwareApplication schema to homepage</td><td class="p2">P2</td><td class="effort-low">1 hr</td><td>🟡 Medium</td></tr>
+        <tr><td>7</td><td>Add HowTo schema to top 3 how-to posts</td><td class="p2">P2</td><td class="effort-low">3 hrs</td><td>🟡 Medium</td></tr>
+        <tr><td>8</td><td>Update FAQ questions to brand-specific queries</td><td class="p2">P2</td><td class="effort-low">2 hrs</td><td>🟡 Medium</td></tr>
+        <tr><td>9</td><td>Create /pricing page with FAQPage schema</td><td class="p2">P2</td><td class="effort-med">1 day</td><td>🟡 Medium</td></tr>
+        <tr><td>10</td><td>Pull Trustpilot reviews as static HTML with Review schema</td><td class="p2">P2</td><td class="effort-med">4 hrs</td><td>🟡 Medium</td></tr>
+        <tr><td>11</td><td>Submit to Capterra, G2, GetApp, Software Advice</td><td class="p3">P3</td><td class="effort-med">3 days</td><td>🔵 Long-term</td></tr>
+        <tr><td>12</td><td>Create competitor comparison page</td><td class="p3">P3</td><td class="effort-high">3 days</td><td>🔵 Long-term</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <div style="text-align:center;padding:40px;color:#374151;font-size:0.82rem;">
+    AEO Audit by AISquad | thepaystubs.com | March 5, 2026
+  </div>
+</div>
+</body>
+</html>
